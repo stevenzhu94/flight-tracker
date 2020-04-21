@@ -25,7 +25,7 @@ function initMap() {
                 scaledSize: new google.maps.Size(20, 20),
                 anchor: new google.maps.Point(10, 10)
             }
-        } 
+        }
     }
 
     // an SVG line projection of a plane
@@ -51,7 +51,7 @@ function initMap() {
     }
 
     // listener to set markers that are inbounds, and remove markers that are not
-    gmap.addListener('bounds_changed', function() {
+    gmap.addListener('bounds_changed', function () {
         setMapOnInBoundMarkers(gmap, markers);
     });
 }
@@ -92,14 +92,15 @@ async function updateMarkers(icon, gmap, markers) {
                 currentIcon.rotation = rotation;
                 marker.setIcon(currentIcon);
 
-                // move marker recursively if position hasn't changed dramatically
+                // move marker recursively if marker is currently shown on map
+                // move marker to destination otherwise
                 var moves = 100;
                 var latDelta = latitude - marker.getPosition().lat();
                 var lngDelta = longitude - marker.getPosition().lng();
-                if (Math.abs(latDelta) > .5 || Math.abs(lngDelta) > .5)
+                if (marker.getMap() == null || Math.abs(latDelta) > .35 || Math.abs(lngDelta) > .35 || (Math.abs(latDelta == 0) && Math.abs(lngDelta == 0)))
                     marker.setPosition(new google.maps.LatLng(latitude, longitude));
                 else
-                    moveMarker(moves, latDelta/moves, lngDelta/moves, marker);       
+                    moveMarker(moves, latDelta / moves, lngDelta / moves, marker);
             } else {
                 if (onground == false && latitude != null) {
                     // icon.url += "#"+callsign;
@@ -136,9 +137,9 @@ function deleteOldMarkers(data) {
 // move marker smoothly by dividing the change into smaller parts
 function moveMarker(countdown, latDelta, lngDelta, marker) {
     marker.setPosition(new google.maps.LatLng(marker.getPosition().lat() + latDelta, marker.getPosition().lng() + lngDelta));
-    // waitTime * original countdown should always be less than time between api calls
-    var waitTime = 250;
-    if (countdown > 0) 
+    // waitTime * original countdown should never be more than time between api calls
+    var waitTime = 290;
+    if (countdown > 0)
         setTimeout(moveMarker, waitTime, countdown - 1, latDelta, lngDelta, marker);
 }
 
