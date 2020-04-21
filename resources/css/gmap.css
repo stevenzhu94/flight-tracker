@@ -9,3 +9,26 @@ html, body {
     margin: 0;
     padding: 0;
 }
+
+/* Input panel for search box */
+#floating-input {
+    position: absolute;
+    top: 10px;
+    left: 35%;
+    z-index: 5;
+    background-color: #fff;
+    padding: 3px;
+    border: 1px solid #999;
+    text-align: center;
+    font-family: 'Roboto','sans-serif';
+    font-weight: 300;
+    font-size: 15px;
+    text-overflow: ellipsis;
+    line-height: 30px;
+    padding-left: 10px;
+    width: 400px;
+}
+
+#floating-input:focus {
+    border-color: #4d90fe;
+}
