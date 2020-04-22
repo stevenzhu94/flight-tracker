@@ -1,13 +1,12 @@
-var gmap;
-var markers;
-
 function initMap() {
+    var gmap;
     gmap = new google.maps.Map(document.getElementById('gmap'), {
         center: { lat: 30.2672, lng: -97.7431 },
         zoom: 8,
         draggable: true
     });
-    markers = {};
+
+    var markers = {};
 
     // png plane icons, cannot be rotated
     var icons = {
@@ -52,6 +51,13 @@ function initMap() {
     // listener to set markers that are inbounds, and remove markers that are not
     gmap.addListener('bounds_changed', function () {
         setMapOnInBoundMarkers(gmap, markers);
+    });
+
+    var highlightedMarker = null;
+    // add event listerner to flight search box to trigger searchForFlight()
+    document.getElementById('flight-input').addEventListener('change', function () {
+        console.log(highlightedMarker);
+        highlightedMarker = searchForFlight(this.value, gmap, markers, highlightedMarker);
     });
 }
 
@@ -101,12 +107,12 @@ async function updateMarkers(icon, gmap, markers) {
             }
         }
     }
-    deleteOldMarkers(response);
+    deleteOldMarkers(response, markers);
     setMapOnInBoundMarkers(gmap, markers);
 }
 
 // loop through response to delete plane from dict of markers, skip if the plane still exitst in the response
-function deleteOldMarkers(data) {
+function deleteOldMarkers(data, markers) {
     var length = data.states.length;
     loop1:
     for (const key in markers) {
@@ -139,7 +145,7 @@ function setMapOnInBoundMarkers(gmap, markers) {
 }
 
 // set marker to mew position test
-function drawMarkerTest() {
+function drawMarkerTest(gmap) {
     var marker = new google.maps.Marker({
         position: { lat: 30.2672, lng: -97.7431 },
         icon: icons['whitePlane'].icon,
@@ -149,10 +155,16 @@ function drawMarkerTest() {
     marker.setMap(gmap);
 }
 
-// center map on flight
-function searchForFlight(flightID) {
-    flightID = flightID.toUpperCase();
+// center map on and highlight flight
+function searchForFlight(flightID, gmap, markers, highlightedMarker) {
+    if (highlightedMarker != null) {
+        var icon = highlightedMarker.getIcon();
+        icon.fillColor = 'white';
+        highlightedMarker.setIcon(icon);
+        highlightedMarker = null;
+    }
 
+    flightID = flightID.toUpperCase();
     while (flightID.length != 8) {
         flightID += " ";
     }
@@ -162,23 +174,22 @@ function searchForFlight(flightID) {
 
         if (key == flightID) {
             found = true;
-            var marker = markers[key];
-            var latlng = marker.getPosition();
-            var icon = marker.getIcon();
-            icon.fillColor = 'deepskyblue';
-            marker.setIcon(icon);
+            highlightedMarker = markers[key];
+            console.log(highlightedMarker);
+            var latlng = highlightedMarker.getPosition();
             gmap.setCenter(latlng);
             gmap.setZoom(10);
-        } else {
-            var marker = markers[key];
-            var icon = marker.getIcon();
-            icon.fillColor = 'white';
-            marker.setIcon(icon);
+            var icon = highlightedMarker.getIcon();
+            icon.fillColor = 'deepskyblue';
+            highlightedMarker.setIcon(icon);
+            break;
         }
-
     }
+    
     if (!found && flightID.trim() != "")
         alert(`${flightID.trim()} could not be found!`);
+
+    return highlightedMarker;
 }
 
 // center map on user set location, currently not used due to no billing info on google account
