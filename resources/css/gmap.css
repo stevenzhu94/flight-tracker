@@ -33,11 +33,11 @@ html, body {
     border-color: #4d90fe;
 }
 
-/* Input panel for search box */
+/* Input panel for flight search box */
 #flight-input {
     position: absolute;
-    top: 10px;
-    left: 35%;
+    top: 94%;
+    left: 1%;
     z-index: 5;
     background-color: #fff;
     padding: 3px;

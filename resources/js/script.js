@@ -177,7 +177,7 @@ function searchForFlight(flightID) {
         }
 
     }
-    if (!found)
+    if (!found && flightID.trim() != "")
         alert(`${flightID.trim()} could not be found!`);
 }
 
