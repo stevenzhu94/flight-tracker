@@ -65,7 +65,7 @@ async function updateMarkers(icon, gmap, markers) {
         var callsign = response.states[i][1];
 
         // check for callsign, ignoring null or empty
-        if (callsign != null && callsign != "" && callsign != undefined) {
+        if (callsign != null && callsign != "        " && callsign != undefined) {
             var longitude = response.states[i][5];
             var latitude = response.states[i][6];
             var onground = response.states[i][8];
@@ -149,17 +149,48 @@ function drawMarkerTest() {
     marker.setMap(gmap);
 }
 
+// center map on flight
+function searchForFlight(flightID) {
+    flightID = flightID.toUpperCase();
+
+    while (flightID.length != 8) {
+        flightID += " ";
+    }
+
+    var found = false;
+    for (const key in markers) {
+
+        if (key == flightID) {
+            found = true;
+            var marker = markers[key];
+            var latlng = marker.getPosition();
+            var icon = marker.getIcon();
+            icon.fillColor = 'deepskyblue';
+            marker.setIcon(icon);
+            gmap.setCenter(latlng);
+            gmap.setZoom(10);
+        } else {
+            var marker = markers[key];
+            var icon = marker.getIcon();
+            icon.fillColor = 'white';
+            marker.setIcon(icon);
+        }
+
+    }
+    if (!found)
+        alert(`${flightID.trim()} could not be found!`);
+}
+
 // center map on user set location, currently not used due to no billing info on google account
 function searchForLocation(gmap) {
+    // Create the search box and link it to the UI element.
+    var input = document.getElementById('floating-input');
+    var searchBox = new google.maps.places.SearchBox(input);
+
     // Bias the SearchBox results towards current map's viewport.
     gmap.addListener('bounds_changed', function () {
         searchBox.setBounds(gmap.getBounds());
     });
-    
-    // Create the search box and link it to the UI element.
-    var input = document.getElementById('floating-input');
-    var searchBox = new google.maps.places.SearchBox(input);
-    
     // Listen for the event fired when the user selects a prediction and retrieve
     // more details for that place.
     searchBox.addListener('places_changed', function () {

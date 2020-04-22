@@ -32,3 +32,27 @@ html, body {
 #floating-input:focus {
     border-color: #4d90fe;
 }
+
+/* Input panel for search box */
+#flight-input {
+    position: absolute;
+    top: 10px;
+    left: 35%;
+    z-index: 5;
+    background-color: #fff;
+    padding: 3px;
+    border: 1px solid #999;
+    text-align: center;
+    font-family: 'Roboto','sans-serif';
+    font-weight: 300;
+    font-size: 15px;
+    text-overflow: ellipsis;
+    line-height: 30px;
+    padding-left: 10px;
+    width: 400px;
+}
+
+#flight-input:focus {
+    border-color: #4d90fe;
+}
+
