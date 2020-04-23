@@ -41,14 +41,17 @@ function initMap() {
         anchor: new google.maps.Point(20, 20)
     };
 
-    // draws markers on map with SVG line paths or png file
     var useSVG = true;
     if (useSVG) {
-        updateMarkers(plane, gmap, markers);
-        setInterval(updateMarkers, 30000, plane, gmap, markers);
+        callOpenSkyAPIAllStates().then(response => updateMarkers(response, plane, gmap, markers));
+        setInterval(() => {
+            callOpenSkyAPIAllStates().then(response => {updateMarkers(response, plane, gmap, markers); });
+        }, 30000);
     } else {
-        updateMarkers(icons['whitePlane'].icon, gmap, markers);
-        setInterval(updateMarkers, 30000, icons['whitePlane'].icon, gmap, markers);
+        callOpenSkyAPIAllStates().then(response => updateMarkers(response, icons['whitePlane'].icon, gmap, markers));
+        setInterval(() => {
+            callOpenSkyAPIAllStates().then(response => {updateMarkers(response, icons['whitePlane'].icon, gmap, markers); });
+        }, 30000);
     }
 
     // listener to set markers that are inbounds, remove markers that are not when bounds change
@@ -64,15 +67,24 @@ function initMap() {
 }
 
 /**
- * Calls the open sky api and updates the location of all markers based on response
+ * This calls the OpenSky API for all states of planes
+ * @returns JSON of response
+ */
+async function callOpenSkyAPIAllStates() {
+    let data = await fetch('https://opensky-network.org/api/states/all');
+    let response = await data.json();
+    return response;
+}
+
+/**
+ * This updates the location of all markers based on response from API call
  * 
+ * @param {Object} response JSON response from API call
  * @param {Object} icon an SVG line projection or png reference 
  * @param {Object} gmap google map
  * @param {Object} markers dict to store markers with the callsign as key
  */
-async function updateMarkers(icon, gmap, markers) {
-    let data = await fetch('https://opensky-network.org/api/states/all');
-    let response = await data.json();
+function updateMarkers(response, icon, gmap, markers) {
 
     // for each state of plane from response, add or update in markers
     for (var i = 0; i < Object.keys(response.states).length; i++) {
@@ -176,6 +188,7 @@ function setMapOnInBoundMarkers(gmap, markers) {
  * @param {Object} gmap The google map object
  * @param {Object} markers The dict of markers currently tracked
  * @param {Object} highlightedMarker The currently highlighted marker
+ * @returns The highlightedMarker to track
  */
 function searchForFlight(flightID, gmap, markers, highlightedMarker) {
     if (highlightedMarker != null) {
