@@ -224,7 +224,7 @@ function searchForFlight(flightID, gmap, markers, highlightedMarker) {
 }
 
 /**
- * Center map on user set location, currently not used due to no billing info on google account
+ * Center map on user set location, currently not used due to no billing info on google account :D
  * 
  * @param {Object} gmap The google map object
  */
