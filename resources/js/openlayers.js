@@ -27,33 +27,20 @@ function initOpenLayerMap() {
         highlightedMarker = searchForFlight(this.value, omap, source);
     });
 
+    // popup to display feature info
     var element = document.getElementById('popup');
-
-    var popup = new ol.Overlay({
-        element: element,
-        positioning: 'bottom-center',
-        stopEvent: false,
-        offset: [0, -10]
-    });
-    omap.addOverlay(popup);
-
-    // display popup on click
-    omap.on('click', function (evt) {
-        var feature = omap.forEachFeatureAtPixel(evt.pixel,
+    omap.on('pointermove', function (event) {
+        var feature = omap.forEachFeatureAtPixel(event.pixel,
             function (feature) {
                 return feature;
             });
         if (feature) {
-            var coordinates = feature.getGeometry().getCoordinates();
-            popup.setPosition(coordinates);
-            $(element).popover({
-                placement: 'top',
-                html: true,
-                content: feature.get('name')
-            });
-            $(element).popover('show');
+            element.style.left = (event.pixel[0])+'px';
+            element.style.top = (event.pixel[1]-element.offsetHeight)+'px';
+            element.style.opacity = .7;
+            element.innerText = feature.get('name');
         } else {
-            $(element).popover('destroy');
+            element.style.opacity = 0;
         }
     });
 }
@@ -202,7 +189,6 @@ function searchForFlight(flightID, omap, source) {
         flightID += " ";
 
     var found = false;
-
     var highlightedMarker = source.getFeatureById(flightID);
     if (highlightedMarker != null) {
         found = true;
@@ -212,8 +198,6 @@ function searchForFlight(flightID, omap, source) {
             duration: 2000,
             zoom: 8
         });
-        // omap.getView().setCenter(coords);
-        // omap.getView().setZoom(10);
     }
 
     if (!found && flightID.trim() != "")
