@@ -27,7 +27,7 @@ function initOpenLayerMap() {
         highlightedMarker = searchForFlight(this.value, omap, source);
     });
 
-    // popup to display feature info
+    // add event to display descriptive popup on mouseover
     var element = document.getElementById('popup');
     omap.on('pointermove', function (event) {
         var feature = omap.forEachFeatureAtPixel(event.pixel,
@@ -35,13 +35,26 @@ function initOpenLayerMap() {
                 return feature;
             });
         if (feature) {
-            element.style.left = (event.pixel[0])+'px';
-            element.style.top = (event.pixel[1]-element.offsetHeight)+'px';
+            element.style.left = (event.pixel[0]) + 'px';
+            element.style.top = (event.pixel[1] - (element.offsetHeight+1)) + 'px';
             element.style.opacity = .7;
             element.innerText = feature.get('name');
         } else {
             element.style.opacity = 0;
         }
+    });
+
+    // pan to flights on click
+    omap.on('click', function (event) {
+        var feature = omap.forEachFeatureAtPixel(event.pixel,
+            function (feature) {
+                return feature;
+            });
+        omap.getView().animate({
+            center: feature.getGeometry().getCoordinates(),
+            duration: 2000,
+            zoom: 8
+        });
     });
 }
 
