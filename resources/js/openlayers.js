@@ -1,3 +1,6 @@
+/**
+ * Initializes the Openlayer map
+ */
 function initOpenLayerMap() {
     var omap = new ol.Map({
         target: document.getElementById('omap'),
@@ -87,10 +90,8 @@ function updateMarkers(response, source) {
 
             // add if markerToBeUpdated does not exist in source, else update
             if (featureToUpdate != null) {
-
                 // set new icon rotation
-                var currentImage = featureToUpdate.getStyle().getImage();
-                currentImage.setRotation(rotation);
+                featureToUpdate.getStyle().getImage().setRotation(rotation);
 
                 // move marker recursively if marker is currently shown on map or directly destination otherwise
                 var currentCoord = featureToUpdate.getGeometry().getCoordinates();
@@ -108,10 +109,10 @@ function updateMarkers(response, source) {
                 if (onground == false && latitude != null) {
                     var marker = new ol.Feature({
                         geometry: new ol.geom.Point(ol.proj.transform([longitude, latitude], 'EPSG:4326', 'EPSG:3857')),
-                        name: `Callsign: ${callsign}, Rotation: ${rotation}`
+                        name: callsign
                     });
-
                     marker.setId(callsign);
+                    marker.title = callsign;
 
                     // png icon as an Style Object
                     var style = new ol.style.Style({
@@ -138,14 +139,10 @@ function updateMarkers(response, source) {
  * @param {Object} source ol.source.Vector object
  */
 function addPlaneLayer(omap, source) {
-
-    console.log(`${source.getFeatures().length}`);
-
     var planesLayer = new ol.layer.Vector({
         className: 'planesLayer',
         source: source
     });
-
     omap.addLayer(planesLayer);
 }
 
@@ -210,8 +207,13 @@ function searchForFlight(flightID, omap, source) {
     if (highlightedMarker != null) {
         found = true;
         var coords = highlightedMarker.getGeometry().getCoordinates();
-        omap.getView().setCenter(coords);
-        omap.getView().setZoom(10);
+        omap.getView().animate({
+            center: coords,
+            duration: 2000,
+            zoom: 8
+        });
+        // omap.getView().setCenter(coords);
+        // omap.getView().setZoom(10);
     }
 
     if (!found && flightID.trim() != "")
