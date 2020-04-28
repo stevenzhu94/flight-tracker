@@ -118,7 +118,7 @@ function updateMarkers(response, source) {
                     var style = new ol.style.Style({
                         image: new ol.style.Icon(({
                             src: '../genre_skies/resources/images/blackplane.png',
-                            scale: .03,
+                            scale: .025,
                             rotation: rotation
                         }))
                     });
