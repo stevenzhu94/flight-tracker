@@ -53,7 +53,7 @@ function initOpenLayerMap() {
         omap.getView().animate({
             center: feature.getGeometry().getCoordinates(),
             duration: 2000,
-            zoom: 8
+            zoom: 12
         });
     });
 }
@@ -91,7 +91,7 @@ function updateMarkers(response, source) {
             // add if markerToBeUpdated does not exist in source, else update
             if (featureToUpdate != null) {
                 // set new icon rotation
-                featureToUpdate.getStyle().getImage().setRotation(rotation);
+                featureToUpdate.getStyle().getImage().setRotation(rotation * (Math.PI/180));
 
                 // move marker recursively if marker is currently shown on map or directly destination otherwise
                 var currentCoord = featureToUpdate.getGeometry().getCoordinates();
@@ -119,7 +119,7 @@ function updateMarkers(response, source) {
                         image: new ol.style.Icon(({
                             src: '../genre_skies/resources/images/blackplane.png',
                             scale: .025,
-                            rotation: rotation
+                            rotation: rotation * (Math.PI/180)
                         }))
                     });
 
@@ -209,7 +209,7 @@ function searchForFlight(flightID, omap, source) {
         omap.getView().animate({
             center: coords,
             duration: 2000,
-            zoom: 8
+            zoom: 12
         });
     }
 
