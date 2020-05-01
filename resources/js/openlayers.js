@@ -17,9 +17,9 @@ function initOpenLayerMap() {
 
     var source = new ol.source.Vector();
 
-    callOpenSkyAPIAllStates().then(response => { updateMarkers(response, source); }).then(() => { addPlaneLayer(omap, source); });
+    callOpenSkyAPIAllStates().then(response => { updateMarkers(omap, response, source); }).then(() => { addPlaneLayer(omap, source); });
     setInterval(() => {
-        callOpenSkyAPIAllStates().then(response => { updateMarkers(response, source); });
+        callOpenSkyAPIAllStates().then(response => { updateMarkers(omap, response, source); });
     }, 30000);
 
     // add event listerner to flight search box to trigger searchForFlight()
@@ -37,7 +37,7 @@ function initOpenLayerMap() {
         if (feature) {
             element.style.left = (event.pixel[0]) + 'px';
             element.style.top = (event.pixel[1] - (element.offsetHeight+1)) + 'px';
-            element.style.opacity = .7;
+            element.style.opacity = .8;
             element.innerText = feature.get('name');
         } else {
             element.style.opacity = 0;
@@ -70,11 +70,12 @@ async function callOpenSkyAPIAllStates() {
 /**
  * This updates the location of all markers based on response from API call
  * 
- * @param {Object} response JSON response from API call
  * @param {Object} omap openlayers map
+ * @param {Object} response JSON response from API call
  * @param {Object} source ol.source.Vector object
  */
-function updateMarkers(response, source) {
+function updateMarkers(omap, response, source) {
+    const extent = omap.getView().calculateExtent(omap.getSize());
 
     // for each state of plane from response, add or update in markers
     for (var i = 0; i < Object.keys(response.states).length; i++) {
@@ -98,11 +99,12 @@ function updateMarkers(response, source) {
                 currentCoord = ol.proj.transform(currentCoord, 'EPSG:3857', 'EPSG:4326');
                 var lngDelta = longitude - currentCoord[0];
                 var latDelta = latitude - currentCoord[1];
-                if (Math.abs(latDelta) > .35 || Math.abs(lngDelta) > .35 || (Math.abs(latDelta == 0) && Math.abs(lngDelta == 0))) {
-                    var newCoord = ol.proj.transform([longitude, latitude], 'EPSG:4326', 'EPSG:3857');
+                let featureInView = ol.extent.containsExtent(extent, featureToUpdate.getGeometry().getExtent());
+                if (!featureInView || Math.abs(latDelta) > .5 || Math.abs(lngDelta) > .5 || (Math.abs(latDelta == 0) && Math.abs(lngDelta == 0))) {
+                    let newCoord = ol.proj.transform([longitude, latitude], 'EPSG:4326', 'EPSG:3857');
                     featureToUpdate.getGeometry().setCoordinates(newCoord);
                 } else {
-                    var moves = 100;
+                    let moves = 100;
                     moveMarker(moves, latDelta / moves, lngDelta / moves, featureToUpdate);
                 }
             } else {
@@ -117,8 +119,8 @@ function updateMarkers(response, source) {
                     // png icon as an Style Object
                     var style = new ol.style.Style({
                         image: new ol.style.Icon(({
-                            src: '../genre_skies/resources/images/blackplane.png',
-                            scale: .025,
+                            src: '../genre_skies/resources/images/whiteplanewithborder.png',
+                            scale: .045,
                             rotation: rotation * (Math.PI/180)
                         }))
                     });
