@@ -94,13 +94,13 @@ function updateMarkers(omap, response, source) {
                 // set new icon rotation
                 featureToUpdate.getStyle().getImage().setRotation(rotation * (Math.PI/180));
 
-                // move marker recursively if marker is currently shown on map or directly destination otherwise
+                // animate marker if it is currently shown on map and moving, else move directly to dest
                 var currentCoord = featureToUpdate.getGeometry().getCoordinates();
                 currentCoord = ol.proj.transform(currentCoord, 'EPSG:3857', 'EPSG:4326');
                 var lngDelta = longitude - currentCoord[0];
                 var latDelta = latitude - currentCoord[1];
                 let featureInView = ol.extent.containsExtent(extent, featureToUpdate.getGeometry().getExtent());
-                if (!featureInView || Math.abs(latDelta) > .5 || Math.abs(lngDelta) > .5 || (Math.abs(latDelta == 0) && Math.abs(lngDelta == 0))) {
+                if (!featureInView || (latDelta == 0 && lngDelta == 0)) {
                     let newCoord = ol.proj.transform([longitude, latitude], 'EPSG:4326', 'EPSG:3857');
                     featureToUpdate.getGeometry().setCoordinates(newCoord);
                 } else {
@@ -192,10 +192,8 @@ function moveMarker(countdown, latDelta, lngDelta, feature) {
 //  * Center map on and highlight new flight
 //  * 
 //  * @param {string} flightID The flight callsign passed in from input
-//  * @param {Object} gmap The google map object
-//  * @param {Object} markers The dict of markers currently tracked
-//  * @param {Object} highlightedMarker The currently highlighted marker
-//  * @returns The highlightedMarker to track
+//  * @param {Object} omap Openlayers map object
+//  * @param {Object} source ol.source.Vector object holding all markers
 //  */
 function searchForFlight(flightID, omap, source) {
 
