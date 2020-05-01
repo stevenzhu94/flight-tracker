@@ -119,7 +119,7 @@ function updateMarkers(omap, response, source) {
                     // png icon as an Style Object
                     var style = new ol.style.Style({
                         image: new ol.style.Icon(({
-                            src: '../genre_skies/resources/images/whiteplanewithborder.png',
+                            src: '../genre_skies/resources/images/airplane.png',
                             scale: .045,
                             rotation: rotation * (Math.PI/180)
                         }))
