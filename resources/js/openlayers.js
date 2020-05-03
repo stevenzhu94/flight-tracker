@@ -11,13 +11,16 @@ function initOpenLayerMap() {
         ],
         view: new ol.View({
             center: ol.proj.fromLonLat([-97.7431, 30.2672]),
-            zoom: 10
+            zoom: 1
         })
     });
 
     var source = new ol.source.Vector();
 
-    callOpenSkyAPIAllStates().then(response => { updateMarkers(omap, response, source); }).then(() => { addPlaneLayer(omap, source); });
+    callOpenSkyAPIAllStates()
+        .then(response => { updateMarkers(omap, response, source); })
+        .then(() => { addPlaneLayer(omap, source); })
+        .then(() => { removeVeil(); } );
     setInterval(() => {
         callOpenSkyAPIAllStates().then(response => { updateMarkers(omap, response, source); });
     }, 30000);
@@ -76,13 +79,12 @@ async function callOpenSkyAPIAllStates() {
  */
 function updateMarkers(omap, response, source) {
     const extent = omap.getView().calculateExtent(omap.getSize());
-
     // for each state of plane from response, add or update in markers
     for (var i = 0; i < Object.keys(response.states).length; i++) {
         var callsign = response.states[i][1];
 
         // check for callsign, ignoring null or empty
-        if (callsign != null && callsign != "        ") {
+        if (callsign !== "" && callsign != "00000000") {
             var longitude = response.states[i][5];
             var latitude = response.states[i][6];
             var onground = response.states[i][8];
@@ -188,15 +190,14 @@ function moveMarker(countdown, latDelta, lngDelta, feature) {
         setTimeout(moveMarker, waitTime, countdown - 1, latDelta, lngDelta, feature);
 }
 
-// /**
-//  * Center map on and highlight new flight
-//  * 
-//  * @param {string} flightID The flight callsign passed in from input
-//  * @param {Object} omap Openlayers map object
-//  * @param {Object} source ol.source.Vector object holding all markers
-//  */
+/**
+ * Center map on searched flight
+ * 
+ * @param {string} flightID The flight callsign passed in from input
+ * @param {Object} omap Openlayers map object
+ * @param {Object} source ol.source.Vector object holding all markers
+ */
 function searchForFlight(flightID, omap, source) {
-
     flightID = flightID.toUpperCase();
     while (flightID.length != 8)
         flightID += " ";
@@ -214,5 +215,10 @@ function searchForFlight(flightID, omap, source) {
     }
 
     if (!found && flightID.trim() != "")
-        alert(`${flightID.trim()} could not be found!`);
+        alert(`Flight ${flightID.trim()} could not be found!`);
+}
+
+function removeVeil() {
+    let veil = document.getElementById('map-veil');
+    veil.remove();
 }
