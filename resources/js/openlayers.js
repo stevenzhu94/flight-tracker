@@ -11,39 +11,43 @@ function initOpenLayerMap() {
         ],
         view: new ol.View({
             center: ol.proj.fromLonLat([-97.7431, 30.2672]),
-            zoom: 1
+            zoom: 5
         })
     });
 
     var source = new ol.source.Vector();
 
+    // call the api in 30 second intervals;
+    const interval = 30000;
+
     callOpenSkyAPIAllStates()
         .then(response => { updateMarkers(omap, response, source); })
         .then(() => { addPlaneLayer(omap, source); })
-        .then(() => { removeVeil(); } );
+        .then(() => { removeVeil(); });
+
     setInterval(() => {
         callOpenSkyAPIAllStates().then(response => { updateMarkers(omap, response, source); });
-    }, 30000);
+    }, interval);
 
-    // add event listerner to flight search box to trigger searchForFlight()
+    // add event listener to flight search box to trigger searchForFlight()
     document.getElementById('flight-input').addEventListener('change', function () {
         highlightedMarker = searchForFlight(this.value, omap, source);
     });
 
     // add event to display descriptive popup on mouseover
-    var element = document.getElementById('popup');
+    const popup = document.getElementById('popup');
     omap.on('pointermove', function (event) {
         var feature = omap.forEachFeatureAtPixel(event.pixel,
             function (feature) {
                 return feature;
             });
         if (feature) {
-            element.style.left = (event.pixel[0]) + 'px';
-            element.style.top = (event.pixel[1] - (element.offsetHeight+1)) + 'px';
-            element.style.opacity = .8;
-            element.innerText = feature.get('name');
+            popup.style.left = (event.pixel[0]) + 'px';
+            popup.style.top = (event.pixel[1] - (popup.offsetHeight+1)) + 'px';
+            popup.style.opacity = .8;
+            popup.innerText = feature.get('name');
         } else {
-            element.style.opacity = 0;
+            popup.style.opacity = 0;
         }
     });
 
@@ -65,8 +69,13 @@ function initOpenLayerMap() {
  * This calls the OpenSky API for all states of planes
  * @returns JSON of response
  */
-async function callOpenSkyAPIAllStates() {
-    let data = await fetch('https://opensky-network.org/api/states/all');
+async function callOpenSkyAPIAllStates(time = null) {
+    var data;
+    if (time == null) {
+        data = await fetch('https://opensky-network.org/api/states/all');
+    } else {
+        data = await fetch(`https://opensky-network.org/api/states/all?time=${time}`);
+    }
     return await data.json();
 }
 
@@ -134,6 +143,10 @@ function updateMarkers(omap, response, source) {
         }
     }
     deleteOldMarkers(response, source);
+
+    // update number of planes tracked
+    var count = source.getFeatures().length;
+    info.innerText = `Flights Tracked: ${count}!`;
 }
 
 /**
@@ -158,12 +171,10 @@ function addPlaneLayer(omap, source) {
  */
 function deleteOldMarkers(response, source) {
     var features = source.getFeatures();
-    var featuresLength = features.length;
-    var responseLength = response.states.length;
     loop1:
-    for (var i = 0; i < featuresLength; i++) {
+    for (var i = 0; i < features.length; i++) {
         var featureId = features[i].getId();
-        for (var j = 0; j < responseLength; j++)
+        for (var j = 0; j < response.states.length; j++)
             if (response.states[j][1] == featureId)
                 continue loop1;
         source.removeFeature(features[i]);
@@ -180,12 +191,9 @@ function deleteOldMarkers(response, source) {
  */
 function moveMarker(countdown, latDelta, lngDelta, feature) {
     const currentCoord = ol.proj.transform(feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326');
-    const currentLng = currentCoord[0];
-    const currentLat = currentCoord[1];
-    const coord = ol.proj.transform([currentLng + lngDelta, currentLat + latDelta], 'EPSG:4326', 'EPSG:3857');
+    const coord = ol.proj.transform([currentCoord[0] + lngDelta, currentCoord[1] + latDelta], 'EPSG:4326', 'EPSG:3857');
     feature.getGeometry().setCoordinates(coord);
-    // waitTime * original countdown should never be more than time between api calls
-    var waitTime = 300;
+    const waitTime = 300; // waitTime * original countdown should never be more than time between api calls
     if (countdown > 0)
         setTimeout(moveMarker, waitTime, countdown - 1, latDelta, lngDelta, feature);
 }
@@ -200,7 +208,7 @@ function moveMarker(countdown, latDelta, lngDelta, feature) {
 function searchForFlight(flightID, omap, source) {
     flightID = flightID.toUpperCase();
     while (flightID.length != 8)
-        flightID += " ";
+        flightID += ' ';
 
     var found = false;
     var highlightedMarker = source.getFeatureById(flightID);

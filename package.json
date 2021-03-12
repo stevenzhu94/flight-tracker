@@ -1,0 +1,16 @@
+{
+  "name": "sandbox",
+  "version": "0.1.0",
+  "description": "sandbox for messing around",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^12.0.1"
+  }
+}
