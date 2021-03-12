@@ -1,7 +1,7 @@
 {
-  "name": "sandbox",
+  "name": "flgiht-tracker",
   "version": "0.1.0",
-  "description": "sandbox for messing around",
+  "description": "project to familiarize myself with js and node",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
