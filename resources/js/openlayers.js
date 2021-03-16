@@ -100,12 +100,12 @@ function updateMarkers(omap, response, source) {
             var rotation = response.states[i][10];
             var featureToUpdate = source.getFeatureById(callsign);
 
-            // add if markerToBeUpdated does not exist in source, else update
+            // update if markerToBeUpdated exists in source, otherwise add it
             if (featureToUpdate != null) {
                 // set new icon rotation
                 featureToUpdate.getStyle().getImage().setRotation(rotation * (Math.PI/180));
 
-                // animate marker if it is currently shown on map and moving, else move directly to dest
+                // if marker not currently in view on map or not moving, skip animation and move directly to dest, else animate marker
                 var currentCoord = featureToUpdate.getGeometry().getCoordinates();
                 currentCoord = ol.proj.transform(currentCoord, 'EPSG:3857', 'EPSG:4326');
                 var lngDelta = longitude - currentCoord[0];
@@ -164,19 +164,16 @@ function addPlaneLayer(omap, source) {
 }
 
 /**
- * Loop through features to delete plane from source, skip if the plane still exist in the response
+ * Loop through features to delete feature from source, skip if the plane still exist in the response
  * 
  * @param {Object} response A JSON object of the response from Open Sky API
  * @param {Object} source ol.source.Vector object that holds all the features; 
  */
 function deleteOldMarkers(response, source) {
     var features = source.getFeatures();
-    loop1:
     for (var i = 0; i < features.length; i++) {
-        var featureId = features[i].getId();
-        for (var j = 0; j < response.states.length; j++)
-            if (response.states[j][1] == featureId)
-                continue loop1;
+        if (response.states.some(id => id[1] === features[i].getId()))
+            continue;    
         source.removeFeature(features[i]);
     }
 }
