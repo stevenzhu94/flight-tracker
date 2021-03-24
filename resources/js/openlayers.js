@@ -1,7 +1,12 @@
+require('dotenv').config({path: __dirname + '/.env'});
+const Plane = require(__dirname + '/resources/js/plane');
+const MongoDBClient = require(__dirname + '/resources/js/mongo').mongoDbClient;
+var dbClient;
+
 /**
  * Initializes the Openlayer map
  */
-function initOpenLayerMap() {
+async function initOpenLayerMap() {
     var omap = new ol.Map({
         target: document.getElementById('omap'),
         layers: [
@@ -17,14 +22,13 @@ function initOpenLayerMap() {
 
     var source = new ol.source.Vector();
 
-    // call the api in 30 second intervals;
-    const interval = 30000;
-
     callOpenSkyAPIAllStates()
         .then(response => { updateMarkers(omap, response, source); })
         .then(() => { addPlaneLayer(omap, source); })
         .then(() => { removeVeil(); });
 
+    // call the api in 30 second intervals;
+    const interval = 30000;
     setInterval(() => {
         callOpenSkyAPIAllStates().then(response => { updateMarkers(omap, response, source); });
     }, interval);
@@ -71,12 +75,17 @@ function initOpenLayerMap() {
  */
 async function callOpenSkyAPIAllStates(time = null) {
     var data;
-    if (time == null) {
-        data = await fetch('https://opensky-network.org/api/states/all');
-    } else {
-        data = await fetch(`https://opensky-network.org/api/states/all?time=${time}`);
+    try {
+        if (time == null) {
+            data = await fetch('https://opensky-network.org/api/states/all');
+        } else {
+            data = await fetch(`https://opensky-network.org/api/states/all?time=${time}`);
+        }
+        return await data.json();
+    } catch (ex) {
+        console.log(`Error caught while fetching data from opensky`, ex);
     }
-    return await data.json();
+    
 }
 
 /**
@@ -86,14 +95,32 @@ async function callOpenSkyAPIAllStates(time = null) {
  * @param {Object} response JSON response from API call
  * @param {Object} source ol.source.Vector object
  */
-function updateMarkers(omap, response, source) {
+async function updateMarkers(omap, response, source) {
+    // connect to db
+    const uri = `mongodb+srv://app_access:${process.env.MONGODB_PW}@cluster0.6ngs7.mongodb.net/flight_tracker?retryWrites=true&w=majority`;
+    dbClient = await new MongoDBClient();
+    await dbClient.connect({url: uri});
+    var cursor = await dbClient.find('planes');
+    const allPlanes = await cursor.toArray();
+
     const extent = omap.getView().calculateExtent(omap.getSize());
     // for each state of plane from response, add or update in markers
     for (var i = 0; i < Object.keys(response.states).length; i++) {
-        var callsign = response.states[i][1];
-
+        const callsign = response.states[i][1];
+        const icao = response.states[i][0];
         // check for callsign, ignoring null or empty
         if (callsign !== "" && callsign != "00000000") {
+            var plane;
+            if (plane = allPlanes.find(p => p.icao == icao)) {
+                console.log('found icao', icao);
+                if (Date.now() - plane.updated > 86,400,000) {
+                    plane.updateSong(null);
+                }
+            } else {
+                plane = new Plane(icao, null);
+                dbClient.insertOne('planes', plane);
+            }
+
             var longitude = response.states[i][5];
             var latitude = response.states[i][6];
             var onground = response.states[i][8];
